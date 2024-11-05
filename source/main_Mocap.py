@@ -3,11 +3,11 @@ import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import sys
-sys.path.append('..')
+sys.path.append('/IAFormer/')
 # print(sys.path)
 from tensorboardX import SummaryWriter
 from utils import other_utils as util
-from utils import View_skeleton as view3d
+# from utils import View_skeleton as view3d
 # from IPython import embed
 from tqdm import tqdm
 
@@ -17,8 +17,8 @@ from option.option_Mocap import Options
 from Dataset_tools import Dataset_Mocap as datasets
 from model import IAFormer as model
 
-from torchstat import stat
-from collections import OrderedDict
+# from torchstat import stat
+# from collections import OrderedDict
 # import torchvision.models as models
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 # from model import xiao_model_codebook
@@ -78,7 +78,7 @@ def main(opt):
             model_path_len = './{}/ckpt_best.pth.tar'.format(opt.ckpt)
 
         print(">>> loading ckpt from '{}'".format(model_path_len))
-        ckpt = torch.load(model_path_len)
+        ckpt = torch.load(model_path_len, map_location=torch.device('cuda'))
         start_epoch = ckpt['epoch'] + 1
         lr_now = ckpt['lr']
 

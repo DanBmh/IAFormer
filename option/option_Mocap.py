@@ -75,7 +75,8 @@ class Options:
         if self.opt.model == 'STAGE_4':
             self.opt.d_model = 16
         
-        log_name = 'exp_{}_{}_in{}_out{}_lr_{}_lrd_{}_bs_{}_ep_{}_{}{}_cb_{}'.format(self.opt.dataset,
+        # log_name = 'exp_{}_{}_in{}_out{}_lr_{}_lrd_{}_bs_{}_ep_{}_{}{}_cb_{}'.format(self.opt.dataset,
+        log_name = 'af_exp_{}_{}_in{}_out{}_lr_{}_lrd_{}_bs_{}_ep_{}_{}{}_cb_{}'.format(self.opt.dataset,
                                                                                            self.opt.model,
                                                                                            self.opt.frame_in,
                                                                                            self.opt.frame_out,

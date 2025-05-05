@@ -28,6 +28,9 @@ import os
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 
+# Comment this out to use the original dataset
+from Dataset_tools import Dataset_Skelda as datasets
+
 
 def main(opt):
     torch.manual_seed(1234567890)
@@ -192,12 +195,12 @@ def run_model(nb_kpts, net_pred, batch_size, optimizer=None, data_loader=None, o
             tmp_ape_joi = APE(data_out[:, :, opt.frame_in:, :, :], data_gt[:, :, opt.frame_in:, :, :], [4, 9, 14, 19, 24])
             ape_joi += tmp_ape_joi#.data.numpy()
 
-            data_vim_gt = data_gt[:, :, opt.frame_in:, :, :].transpose(2, 1)
-            data_vim_gt = data_vim_gt.reshape(opt.batch_size, opt.seq_len, -1, 3)
-            data_vim_pred = data_out[:, :, opt.frame_in:, :, :].transpose(2, 1)
-            data_vim_pred = data_vim_pred.reshape(opt.batch_size, opt.seq_len, -1, 3)
-            tmp_vim_joi = batch_VIM(data_vim_gt.cpu().data.numpy(), data_vim_pred.cpu().data.numpy(), [4, 9, 14, 19, 24])
-            vim_joi += tmp_vim_joi#.data.numpy()
+            # data_vim_gt = data_gt[:, :, opt.frame_in:, :, :].transpose(2, 1)
+            # data_vim_gt = data_vim_gt.reshape(opt.batch_size, opt.seq_len, -1, 3)
+            # data_vim_pred = data_out[:, :, opt.frame_in:, :, :].transpose(2, 1)
+            # data_vim_pred = data_vim_pred.reshape(opt.batch_size, opt.seq_len, -1, 3)
+            # tmp_vim_joi = batch_VIM(data_vim_gt.cpu().data.numpy(), data_vim_pred.cpu().data.numpy(), [4, 9, 14, 19, 24])
+            # vim_joi += tmp_vim_joi#.data.numpy()
 
 
 
@@ -268,12 +271,12 @@ def eval(opt, net_pred, data_loader, nb_kpts, epo):
         tmp_ape_joi = APE(data_out[:, :, opt.frame_in:, :, :], data_gt[:, :, opt.frame_in:, :, :], [4, 9, 14, 19, 24])
         ape_joi += tmp_ape_joi#.data.numpy()
 
-        data_vim_gt = data_gt[:, :, opt.frame_in:, :, :].transpose(2, 1)
-        data_vim_gt = data_vim_gt.reshape(opt.batch_size, opt.seq_len, -1, 3)
-        data_vim_pred = data_out[:, :, opt.frame_in:, :, :].transpose(2, 1)
-        data_vim_pred = data_vim_pred.reshape(opt.batch_size, opt.seq_len, -1, 3)
-        tmp_vim_joi = batch_VIM(data_vim_gt.cpu().data.numpy(), data_vim_pred.cpu().data.numpy(), [4, 9, 14, 19, 24])
-        vim_joi += tmp_vim_joi#.data.numpy()
+        # data_vim_gt = data_gt[:, :, opt.frame_in:, :, :].transpose(2, 1)
+        # data_vim_gt = data_vim_gt.reshape(opt.batch_size, opt.seq_len, -1, 3)
+        # data_vim_pred = data_out[:, :, opt.frame_in:, :, :].transpose(2, 1)
+        # data_vim_pred = data_vim_pred.reshape(opt.batch_size, opt.seq_len, -1, 3)
+        # tmp_vim_joi = batch_VIM(data_vim_gt.cpu().data.numpy(), data_vim_pred.cpu().data.numpy(), [4, 9, 14, 19, 24])
+        # vim_joi += tmp_vim_joi#.data.numpy()
 
     mpjpe_joi = mpjpe_joi/n * 1000  # n = testing dataset length
     ape_joi = ape_joi/n * 1000 * opt.batch_size

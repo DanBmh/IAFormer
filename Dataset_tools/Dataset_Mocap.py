@@ -55,6 +55,11 @@ class Datasets(data.Dataset):
         input_seq = input_seq[:, :, i_idx]
         output_seq = output_seq.transpose(0, 2, 1)
 
+        # print(input_seq.shape)
+        # print(output_seq.shape)
+        # # (3, 45, 75)
+        # # (3, 45, 75)
+
         return input_seq, output_seq
 
     def __len__(self):

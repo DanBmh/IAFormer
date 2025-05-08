@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -56,7 +57,7 @@ def main(opt):
         dataset = datasets.Datasets(opt, mode='test')
 
         print('>>> Training dataset length: {:d}'.format(dataset.__len__()))
-        data_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=0, pin_memory=False)
+        data_loader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0, pin_memory=False)
         # data_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=False, num_workers=0, pin_memory=True)
 
     in_features = opt.in_features
@@ -80,13 +81,40 @@ def main(opt):
         else:
             model_path_len = './{}/ckpt_best.pth.tar'.format(opt.ckpt)
 
-        print(">>> loading ckpt from '{}'".format(model_path_len))
-        ckpt = torch.load(model_path_len, map_location=torch.device('cuda'))
+
+        if opt.batch_size == 1:
+            model_path_len = model_path_len.replace('_bs_1_', '_bs_96_')
+            print(">>> loading ckpt from '{}'".format(model_path_len))
+
+            # The model's layers 'PE.joint' and 'PE.person' have the shape of the training batchsize
+            # To use it with a batchsize of 1, only take the first element of their weights
+            # This slightly reduced the performance by about 2%, but is necessary for real usecases
+            ckpt = torch.load(model_path_len)
+            state_dict = ckpt['state_dict']
+            model_state_dict = net_pred.state_dict()
+            for key in model_state_dict:
+                if key in state_dict:
+                    ckpt_tensor = state_dict[key]
+                    model_tensor = model_state_dict[key]
+
+                    if ckpt_tensor.shape != model_tensor.shape:
+                        # Slice to match shape if possible
+                        try:
+                            sliced_tensor = ckpt_tensor[:model_tensor.shape[0], :model_tensor.shape[1]]
+                            model_state_dict[key] = sliced_tensor
+                            print(f"Sliced and loaded: {key}")
+                        except:
+                            print(f"Could not slice: {key}, skipping")
+                    else:
+                        model_state_dict[key] = ckpt_tensor
+            net_pred.load_state_dict(model_state_dict, strict=False)
+        else:
+            print(">>> loading ckpt from '{}'".format(model_path_len))
+            ckpt = torch.load(model_path_len, map_location=torch.device('cuda'))
+            net_pred.load_state_dict(ckpt['state_dict'])
+        
         start_epoch = ckpt['epoch'] + 1
         lr_now = ckpt['lr']
-
-        net_pred.load_state_dict(ckpt['state_dict'])
-        
         print(">>> ckpt loaded (epoch: {} | err: {} | lr: {})".format(ckpt['epoch'], ckpt['err'], lr_now))
 
 
@@ -132,7 +160,16 @@ def main(opt):
 
     else: #test
 
+        print(
+            "total number of parameters of the network is: "
+            + str(sum(p.numel() for p in net_pred.parameters() if p.requires_grad))
+        )
+
+        stime = time.time()
+
         run_model(nb_kpts, net_pred, opt.batch_size, data_loader=data_loader, opt=opt)
+        
+        print("Testing took {} seconds".format(int(time.time() - stime)))
 
 def run_model(nb_kpts, net_pred, batch_size, optimizer=None, data_loader=None, opt=None, epo=0):
 
@@ -176,6 +213,9 @@ def run_model(nb_kpts, net_pred, batch_size, optimizer=None, data_loader=None, o
             if np.shape(x)[0] < opt.batch_size:
                 continue #when only one sample in this batch
             n += batch_size
+
+            if batch_idx % 1000 == 0:
+                print(batch_idx, "/", len(data_loader))
 
             x = x.float().cuda()
             y = y.float().cuda()

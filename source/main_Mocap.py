@@ -46,7 +46,7 @@ def main(opt):
     if opt.mode == 'train':
         print('>>> DATA loading >>>')
         dataset = datasets.Datasets(opt, mode='train')
-        eval_dataset = datasets.Datasets(opt, mode='test')
+        eval_dataset = datasets.Datasets(opt, mode='eval')
 
         print('>>> Training dataset length: {:d}'.format(dataset.__len__()))
         data_loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=0, pin_memory=True)
@@ -232,8 +232,8 @@ def run_model(nb_kpts, net_pred, batch_size, optimizer=None, data_loader=None, o
             # print(tmp_joi)
             mpjpe_joi += tmp_joi.cpu().data.numpy()
 
-            tmp_ape_joi = APE(data_out[:, :, opt.frame_in:, :, :], data_gt[:, :, opt.frame_in:, :, :], [4, 9, 14, 19, 24])
-            ape_joi += tmp_ape_joi#.data.numpy()
+            # tmp_ape_joi = APE(data_out[:, :, opt.frame_in:, :, :], data_gt[:, :, opt.frame_in:, :, :], [4, 9, 14, 19, 24])
+            # ape_joi += tmp_ape_joi#.data.numpy()
 
             # data_vim_gt = data_gt[:, :, opt.frame_in:, :, :].transpose(2, 1)
             # data_vim_gt = data_vim_gt.reshape(opt.batch_size, opt.seq_len, -1, 3)
@@ -249,7 +249,7 @@ def run_model(nb_kpts, net_pred, batch_size, optimizer=None, data_loader=None, o
         vim_joi = vim_joi/n * 100
         # print(ape_joi.shape, vim_joi.shape)
         select_frame = [4, 9, 14, 19, 24]
-        print(mpjpe_joi[opt.frame_in:][select_frame])
+        print(mpjpe_joi)
         print("APE: ", ape_joi)
         print("VIM: ", vim_joi)
 
@@ -308,8 +308,8 @@ def eval(opt, net_pred, data_loader, nb_kpts, epo):
         # print(tmp_joi)
         mpjpe_joi += tmp_joi.cpu().data.numpy()
 
-        tmp_ape_joi = APE(data_out[:, :, opt.frame_in:, :, :], data_gt[:, :, opt.frame_in:, :, :], [4, 9, 14, 19, 24])
-        ape_joi += tmp_ape_joi#.data.numpy()
+        # tmp_ape_joi = APE(data_out[:, :, opt.frame_in:, :, :], data_gt[:, :, opt.frame_in:, :, :], [4, 9, 14, 19, 24])
+        # ape_joi += tmp_ape_joi#.data.numpy()
 
         # data_vim_gt = data_gt[:, :, opt.frame_in:, :, :].transpose(2, 1)
         # data_vim_gt = data_vim_gt.reshape(opt.batch_size, opt.seq_len, -1, 3)

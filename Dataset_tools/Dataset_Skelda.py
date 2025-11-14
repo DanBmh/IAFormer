@@ -13,6 +13,7 @@ import utils_pipeline
 datamode = "gt-gt"
 # datamode = "pred-pred"
 
+num_persons = 1
 config = {
     "item_step": 2,
     "window_step": 2,
@@ -37,9 +38,11 @@ config = {
 
 datasets_train = [
     "/datasets/preprocessed/human36m/train_forecast_rpt.json",
+    # "/datasets/preprocessed/chi3d/train_forecast_rpt.json",
 ]
 
 dataset_eval_test = "/datasets/preprocessed/human36m/{}_forecast_rpt.json"
+# dataset_eval_test = "/datasets/preprocessed/chi3d/{}_forecast_rpt.json"
 
 
 # ==================================================================================================
@@ -60,6 +63,8 @@ class Datasets(data.Dataset):
             dataset_train, dlen_train = [], 0
             for dp in datasets_train:
                 cfg = copy.deepcopy(config)
+                if "chi3d" in dp:
+                    cfg["select_joints"][cfg["select_joints"].index("nose")] = "head"
                 if "mocap" in dp:
                     cfg["select_joints"][
                         cfg["select_joints"].index("nose")
@@ -72,10 +77,14 @@ class Datasets(data.Dataset):
             dlen = dlen_train
         else:
             if mode != "test":
-                esplit = "test" if "mocap" in dataset_eval_test else "eval"
+                esplit = "eval"
+                esplit = "test" if "mocap" in dataset_eval_test else esplit
+                esplit = "test" if "chi3d" in dataset_eval_test else esplit
             else:
                 esplit = "test"
             cfg = copy.deepcopy(config)
+            if "chi3d" in dataset_eval_test:
+                cfg["select_joints"][cfg["select_joints"].index("nose")] = "head"
             if "mocap" in dataset_eval_test:
                 cfg["select_joints"][cfg["select_joints"].index("nose")] = "head_upper"
             dataset_eval, dlen_eval = utils_pipeline.load_dataset(
@@ -101,21 +110,21 @@ class Datasets(data.Dataset):
             )
 
             # Switch y and z axes
-            sequences_train = sequences_train[:, :, :, [0, 2, 1]]
-            sequences_gt = sequences_gt[:, :, :, [0, 2, 1]]
+            sequences_train = sequences_train[..., [0, 2, 1]]
+            sequences_gt = sequences_gt[..., [0, 2, 1]]
 
             # Reshape to [nbatch, npersons, nframes, njoints, 3]
             J = len(config["select_joints"])
             sequences_train = sequences_train.reshape(
-                [nbatch, 1, sequences_train.shape[1], J, 3]
+                [nbatch, num_persons, sequences_train.shape[1], J, 3]
             )
             sequences_gt = sequences_gt.reshape(
-                [nbatch, 1, sequences_gt.shape[1], J, 3]
+                [nbatch, num_persons, sequences_gt.shape[1], J, 3]
             )
 
             temp_data = np.concatenate([sequences_train, sequences_gt], axis=2)
             temp_data = temp_data[0]
-            temp_data = temp_data.reshape(1, -1, J * 3)
+            temp_data = temp_data.reshape(num_persons, -1, J * 3)
 
             self.data.append(temp_data)
         self.len = len(self.data)
